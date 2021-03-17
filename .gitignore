@@ -1,0 +1,7 @@
+*.pyc
+.pytest_cache/
+.vscode/
+build/
+dist/
+remedy_py.egg-info
+test.*
