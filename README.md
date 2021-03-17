@@ -43,7 +43,7 @@ ENTRY_TEMPLATE = {
 FORM_NAME = "HPD:IncidentInterface_Create"
 RETURN_VALUES = ["Incident Number", "Request ID"]
 
-incident, _ = client.create_form_entry(FORM_NAME, ENTRY_TEMPLATE, RETURN_VALUES)
+incident, status_code = client.create_form_entry(FORM_NAME, ENTRY_TEMPLATE, RETURN_VALUES)
 incident_id = incident["values"]["Incident Number"]
 request_id = incident["values"]["Request ID"]
 ```
