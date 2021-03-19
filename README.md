@@ -54,3 +54,7 @@ Please be as descriptive as possible with issues or feature requests and provide
 with any pull requests.
 
 Thank you for helping to advance this project!
+
+### Contributors
+Special shout out to my good friend and colleague Ryan Gordon (@Ryan-Gordon & @Ryan-Gordon1)
+for helping get this off the ground. I appreciate your open and honest feedback and bright ideas.
