@@ -6,7 +6,7 @@ my own and open-source it. Your feedback and contributions are welcome (see [Con
 that we can make this package useful to as many people as possible.
 
 ## Installation
-You may install `remedy-py` directly from [PyPI - TODO](pypi.org), or via pip:
+You may install `remedy-py` directly from [PyPI](https://pypi.org/project/remedy-py/), or via pip:
 `pip install remedy-py`. 
 
 ## Usage

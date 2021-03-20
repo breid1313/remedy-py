@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 setup(
     name="remedy_py",
-    version="0.0.0",
+    version="1.0.0",
     description="A python package used to interface with the BMC Remedy ITSM REST API",
     license="MIT",
     author="Brian Reid",
