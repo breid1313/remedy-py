@@ -13,7 +13,7 @@ You may install `remedy-py` directly from [PyPI - TODO](pypi.org), or via pip:
 
 ### Import the Package
 Once you have the package installed, import the RemedyClient class for use in your Python program as follows:
-`from remedy-py.RemedyAPIClient import RemedyClient`
+`from remedy_py.RemedyAPIClient import RemedyClient`
 
 ### Instantiate a Client
 The `RemedyClient` constructor has three required arguments: `host`, `user`, and `password`.
