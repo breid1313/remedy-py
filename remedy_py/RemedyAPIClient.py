@@ -80,6 +80,7 @@ class RemedyClient(RemedyAPI):
 
         response = requests.request("POST", url, headers=self.reqHeaders, verify=self.verify,
                                     proxies=self.proxies, timeout=self.timeout)
+        response.raise_for_status()
 
         # logging off returns an empty 204
         # return empty json in the absence of response/incident content
@@ -112,6 +113,7 @@ class RemedyClient(RemedyAPI):
 
         response = requests.request("POST", url, json=entry, headers=self.reqHeaders, verify=self.verify,
                                     proxies=self.proxies, timeout=self.timeout)
+        response.raise_for_status()
         
         return response.json(), response.status_code
 
@@ -133,6 +135,7 @@ class RemedyClient(RemedyAPI):
         url = self.base_url + REQUEST_PREFIX + "/{}/{}".format(form_name, req_id)
         response = requests.request("GET", url, headers=self.reqHeaders, verify=self.verify,
                                     proxies=self.proxies, timeout=self.timeout)
+        response.raise_for_status()                                    
 
         return response.json(), response.status_code
 
@@ -160,6 +163,7 @@ class RemedyClient(RemedyAPI):
 
         response = requests.request("PUT", url, json=entry, headers=self.reqHeaders, verify=self.verify,
                                     proxies=self.proxies, timeout=self.timeout)
+        response.raise_for_status()
         
         # Remedy returns an empty 204 for form updates.
         # get the updated incident and return it with the update status code
@@ -186,6 +190,7 @@ class RemedyClient(RemedyAPI):
         url = self.base_url + REQUEST_PREFIX + "/{}/{}".format(form_name, req_id)
         response = requests.request("DELETE", url, headers=self.reqHeaders, verify=self.verify,
                                     proxies=self.proxies, timeout=self.timeout)
+        response.raise_for_status()
 
         response_json = response.json() if response.content else {}
 
