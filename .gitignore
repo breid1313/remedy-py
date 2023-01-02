@@ -5,3 +5,4 @@ build/
 dist/
 remedy_py.egg-info
 test.*
+*.code-workspace
