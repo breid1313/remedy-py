@@ -49,7 +49,7 @@ request_id = incident["values"]["Request ID"]
 ```
 
 ## Contributing
-Your feedback and contributions and welcome through issues and pull requests on the GitHub repository.
+Your feedback and contributions are welcome through issues and pull requests on the GitHub repository.
 Please be as descriptive as possible with issues or feature requests and provide testing instructions
 with any pull requests.
 
