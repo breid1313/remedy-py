@@ -52,5 +52,5 @@ class RemedyAPI(ABC):
         raise NotImplementedError("Child classes must implement all methods of the RemedyAPI interface.")
 
     @abc.abstractmethod
-    def attach_file(self, *args, **kwargs):
+    def incident_file(self, *args, **kwargs):
         raise NotImplementedError("Child classes must implement all methods of the RemedyAPI interface.")

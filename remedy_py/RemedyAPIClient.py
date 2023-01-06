@@ -230,7 +230,7 @@ class RemedyClient(RemedyAPI):
         # return empty json in the absence of response/incident content
         return response_json, response.status_code
         
-    def advanced_query(self, form_name, query, field_list=None, payload={}):
+    def advanced_query(self, form_name, query, return_values=None, payload={}):
         """
         advanced_query is a member function used to gather form data
         based on a form name and request ID
@@ -245,7 +245,7 @@ class RemedyClient(RemedyAPI):
         :return: the response content and http status code as a tuple
         :rtype: tuple(json, int)
         """
-        if field_list is None:
+        if return_values is None:
             # Will return the complete form
             fields = ""
         else:
@@ -260,7 +260,7 @@ class RemedyClient(RemedyAPI):
 
         return response.json(), response.status_code
 
-def attach_file(self, form_name, req_id, filepath, filename, details=None, view_access=None, payload={}):
+    def incident_file(self, form_name, req_id, filepath, filename, details=None, view_access=None, payload={}):
         """
         attach_file is a member function used to update form data
         based on a form name and request ID
@@ -278,27 +278,25 @@ def attach_file(self, form_name, req_id, filepath, filename, details=None, view_
         :rtype: tuple(json, int)
         """
         # Retrieve Entry ID from form to use on modify entry
-        incident = self.advanced_query("HPD:Help Desk", "'Incident Number'=\"{}\"".format(req_id), ["Entry ID"])
-        entry_id = incident["values"]["Entry ID"]
+        incident, status_code = self.advanced_query("HPD:Help Desk", "'Incident Number'=\"{}\"".format(req_id), ["Entry ID"])
+        entry_id = incident['entries'][0]["values"]["Entry ID"]
+
+        pprint(f'Entry ID {entry_id}')
 
         # Create attachment URL and values
        
-        if headers is None:
-            reqHeaders = self.reqHeaders
-        else:
-            reqHeaders = self.build_request_headers(headers)
+       # Set the header for multipart form (replace default of app/json)
+        #reqHeaders = self.build_request_headers({'Content-Type': 'multipart/form-data'})
 
         url = self.base_url + REQUEST_PREFIX + "/{}/{}".format(form_name, req_id)
 
         values = {
-            "values": {
                 "z1D_Details": "{}".format(details if details is None else ""),
                 "z1D_View_Access": "{}".format(view_access if details is None else "Public"),
                 "z1D_Activity_Type": "General Information",
                 "z1D_Secure_Log": "Yes",
                 "z2AF_Act_Attachment_1": "{}".format(filename)
                 }
-            }
 
         # Create the files multipart submission
 
@@ -316,11 +314,25 @@ def attach_file(self, form_name, req_id, filepath, filename, details=None, view_
             content = 'File {} could not be read'.format(filepath+sep+filename)
 
         # Add json to the multipart submission
-        files['entry'] = ({'values': values}, 'application/json')
-        files[filename] = (filename, content, 'application/octet-stream')
 
-        response = requests.request("PUT", url, files=files, headers=reqHeaders, verify=self.verify,
-                                    proxies=self.proxies, timeout=timeout)
+        files=[
+            ('entry',
+                ('entry', str({'values': values}), 'application/json')
+                ),
+            ('attach-z2AF_Act_Attachment_1', (filename, content,'text/plain')
+                )
+        ]
+
+        url = self.base_url + REQUEST_PREFIX + "/{}/{}".format(form_name, entry_id)
+
+        pprint(requests.Request('POST', url, files=files, headers={'authorization': self.reqHeaders['Authorization']}).prepare().body)
+        pprint(requests.Request('POST', url, files=files, headers={'authorization': self.reqHeaders['Authorization']}).prepare().headers)
+        pprint(requests.Request('POST', url, files=files, headers={'authorization': self.reqHeaders['Authorization']}).prepare().url)
+        pprint(requests.Request('POST', url, files=files, headers={'authorization': self.reqHeaders['Authorization']}).prepare().path_url)
+                
+        response = requests.request("PUT", url, data={}, files=files, headers={'authorization': self.reqHeaders['Authorization']}, verify=self.verify,
+                                    proxies=self.proxies, timeout=self.timeout)
+        
         response.raise_for_status()
         
         # Remedy returns an empty 204 for form updates.
