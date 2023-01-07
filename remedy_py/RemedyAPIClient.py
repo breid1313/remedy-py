@@ -12,9 +12,9 @@ import requests
 from .interface.remedy_api import RemedyAPI
 # Load constant values for API Calls
 from .RemedyConstants import *
-from pprint import pprint
 from os import sep
 from os.path import getsize
+import json
 
 REQUEST_PREFIX = "/arsys/v1/entry"
 DEFAULT_TIMEOUT = 30
@@ -31,7 +31,13 @@ class RemedyClient(RemedyAPI):
         self.port = port or DEFAULT_HTTPS_PORT if self.verify else port or DEFAULT_HTTP_PORT
         self.base_url = HTTPS_BASE_URL(self.host, self.port) if self.verify else HTTP_BASE_URL(self.host, self.port)
         self.authHeaders = {"content-type": "application/x-www-form-urlencoded"}
+        self.isLoggedin = False
         self.reqHeaders = self.build_request_headers()
+        
+
+    def __del__(self):
+        if self.isLoggedin:
+            self.release_token()
 
     def get_token(self):
         """
@@ -51,6 +57,8 @@ class RemedyClient(RemedyAPI):
         token = response.content
         encoding = response.apparent_encoding
         token = token.decode(encoding)
+
+        self.isLoggedin = True
 
         return token
 
@@ -101,6 +109,8 @@ class RemedyClient(RemedyAPI):
         # return empty json in the absence of response/incident content
         response_json = response.json() if response.content else {}
 
+        self.isLoggedin = False
+
         return response_json, response.status_code
 
     def create_form_entry(self, form_name, values, headers=None, return_values=[], timeout=None, payload={}):
@@ -136,12 +146,6 @@ class RemedyClient(RemedyAPI):
 
         entry = { "values": values}
 
-        # Standard application/json header (or at least not multipart)
-        # pprint(requests.Request('POST', url, json=values, headers=reqHeaders).prepare().body)
-        # pprint(requests.Request('POST', url, json=values, headers=reqHeaders).prepare().headers)
-        # pprint(requests.Request('POST', url, json=values, headers=reqHeaders).prepare().url)
-        # pprint(requests.Request('POST', url, json=values, headers=reqHeaders).prepare().path_url)
-        
         response = requests.request("POST", url, json=entry, headers=reqHeaders, verify=self.verify,
                             proxies=self.proxies, timeout=timeout)
             
@@ -260,7 +264,7 @@ class RemedyClient(RemedyAPI):
 
         return response.json(), response.status_code
 
-    def incident_file(self, form_name, req_id, filepath, filename, details=None, view_access=None, payload={}):
+    def incident_file(self, form_name, req_id, filepath, filename, content_type='text/plain', details=None, view_access='Public', payload={}):
         """
         attach_file is a member function used to update form data
         based on a form name and request ID
@@ -279,9 +283,8 @@ class RemedyClient(RemedyAPI):
         """
         # Retrieve Entry ID from form to use on modify entry
         incident, status_code = self.advanced_query("HPD:Help Desk", "'Incident Number'=\"{}\"".format(req_id), ["Entry ID"])
-        entry_id = incident['entries'][0]["values"]["Entry ID"]
 
-        pprint(f'Entry ID {entry_id}')
+        entry_id = incident['entries'][0]["values"]["Entry ID"]
 
         # Create attachment URL and values
        
@@ -291,8 +294,8 @@ class RemedyClient(RemedyAPI):
         url = self.base_url + REQUEST_PREFIX + "/{}/{}".format(form_name, req_id)
 
         values = {
-                "z1D_Details": "{}".format(details if details is None else ""),
-                "z1D_View_Access": "{}".format(view_access if details is None else "Public"),
+                "z1D_Details": "{}".format(details if details is not None else "No details entered"),
+                "z1D_View_Access": "{}".format(view_access if view_access is not None else "Public"),
                 "z1D_Activity_Type": "General Information",
                 "z1D_Secure_Log": "Yes",
                 "z2AF_Act_Attachment_1": "{}".format(filename)
@@ -300,7 +303,6 @@ class RemedyClient(RemedyAPI):
 
         # Create the files multipart submission
 
-        files = {}
         try:
             size = getsize(filepath+sep+filename)
             with open(f'{filepath+sep+filename}', 'rb') as file:
@@ -314,25 +316,17 @@ class RemedyClient(RemedyAPI):
             content = 'File {} could not be read'.format(filepath+sep+filename)
 
         # Add json to the multipart submission
-
-        files=[
-            ('entry',
-                ('entry', str({'values': values}), 'application/json')
-                ),
-            ('attach-z2AF_Act_Attachment_1', (filename, content,'text/plain')
-                )
-        ]
+        files = {}
+        # None in the first part will not show a filename.
+        files['entry'] = (None, json.dumps({'values': values}).encode('utf-8'), 'application/json')
+        files['attach-z2AF_Act_Attachment_1'] = (filename, content, content_type)
 
         url = self.base_url + REQUEST_PREFIX + "/{}/{}".format(form_name, entry_id)
 
-        pprint(requests.Request('POST', url, files=files, headers={'authorization': self.reqHeaders['Authorization']}).prepare().body)
-        pprint(requests.Request('POST', url, files=files, headers={'authorization': self.reqHeaders['Authorization']}).prepare().headers)
-        pprint(requests.Request('POST', url, files=files, headers={'authorization': self.reqHeaders['Authorization']}).prepare().url)
-        pprint(requests.Request('POST', url, files=files, headers={'authorization': self.reqHeaders['Authorization']}).prepare().path_url)
-                
-        response = requests.request("PUT", url, data={}, files=files, headers={'authorization': self.reqHeaders['Authorization']}, verify=self.verify,
-                                    proxies=self.proxies, timeout=self.timeout)
-        
+        reqHeaders = {'Authorization': self.reqHeaders['Authorization']}
+        response = requests.request("PUT", url, data=None, files=files, headers=reqHeaders, verify=self.verify,
+                                     proxies=self.proxies, timeout=self.timeout)
+
         response.raise_for_status()
         
         # Remedy returns an empty 204 for form updates.
