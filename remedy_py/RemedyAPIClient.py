@@ -12,7 +12,7 @@ import requests
 from .interface.remedy_api import RemedyAPI
 # Load constant values for API Calls
 from .RemedyConstants import *
-from os import sep
+from os import sep, SEEK_END
 from os.path import getsize
 import json
 
@@ -33,11 +33,6 @@ class RemedyClient(RemedyAPI):
         self.authHeaders = {"content-type": "application/x-www-form-urlencoded"}
         self.isLoggedin = False
         self.reqHeaders = self.build_request_headers()
-        
-
-    def __del__(self):
-        if self.isLoggedin:
-            self.release_token()
 
     def get_token(self):
         """
@@ -70,7 +65,10 @@ class RemedyClient(RemedyAPI):
         :return: dict of request headers
         :rtype: dict
         """
-        token = self.get_token()
+
+        if not self.isLoggedin:
+            token = self.get_token()
+
         reqHeaders = {
             "Authorization": "AR-JWT " + token
         }
@@ -264,9 +262,9 @@ class RemedyClient(RemedyAPI):
 
         return response.json(), response.status_code
 
-    def incident_file(self, form_name, req_id, filepath, filename, content_type='text/plain', details=None, view_access='Public', payload={}):
+    def attach_file_to_incident(self, req_id, filepath, filename, content_type='text/plain', details=None, view_access='Public', payload={}):
         """
-        attach_file is a member function used to update form data
+        attach_file_to_incident is a member function used to update form data
         based on a form name and request ID
         The function returns: a tuple with the response content as json and the http status code.
 
@@ -282,17 +280,13 @@ class RemedyClient(RemedyAPI):
         :rtype: tuple(json, int)
         """
         # Retrieve Entry ID from form to use on modify entry
-        incident, status_code = self.advanced_query("HPD:Help Desk", "'Incident Number'=\"{}\"".format(req_id), ["Entry ID"])
+        form_name="HPD:Help Desk"
+        incident, status_code = self.advanced_query(form_name, "'Incident Number'=\"{}\"".format(req_id), ["Entry ID"])
 
         entry_id = incident['entries'][0]["values"]["Entry ID"]
 
         # Create attachment URL and values
        
-       # Set the header for multipart form (replace default of app/json)
-        #reqHeaders = self.build_request_headers({'Content-Type': 'multipart/form-data'})
-
-        url = self.base_url + REQUEST_PREFIX + "/{}/{}".format(form_name, req_id)
-
         values = {
                 "z1D_Details": "{}".format(details if details is not None else "No details entered"),
                 "z1D_View_Access": "{}".format(view_access if view_access is not None else "Public"),
@@ -303,13 +297,15 @@ class RemedyClient(RemedyAPI):
 
         # Create the files multipart submission
 
+        # Cannot send files larger than 10MB (10*1024*1024)
+        #   If larger, send the bottom 10MB (where incident issues will likely be)
         try:
             size = getsize(filepath+sep+filename)
             with open(f'{filepath+sep+filename}', 'rb') as file:
                 # Do not read more than 10MB of the file 
                 if size >= 10 * 1024 * 1024 :
                     # File is bigger than 10MB, so read the last 10MB
-                    file.seek(-10 * 1024 * 1024, os.SEEK_END)  # Note minus sign
+                    file.seek(-10 * 1024 * 1024, SEEK_END)  # Note minus sign
                 # Read the remaining of the file (or all of it)
                 content = file.read()
         except:
@@ -318,6 +314,7 @@ class RemedyClient(RemedyAPI):
         # Add json to the multipart submission
         files = {}
         # None in the first part will not show a filename.
+        # need to use json.dumps with the encode. str(values) will not work.
         files['entry'] = (None, json.dumps({'values': values}).encode('utf-8'), 'application/json')
         files['attach-z2AF_Act_Attachment_1'] = (filename, content, content_type)
 
@@ -325,6 +322,54 @@ class RemedyClient(RemedyAPI):
 
         reqHeaders = {'Authorization': self.reqHeaders['Authorization']}
         response = requests.request("PUT", url, data=None, files=files, headers=reqHeaders, verify=self.verify,
+                                     proxies=self.proxies, timeout=self.timeout)
+
+        response.raise_for_status()
+        
+        # Remedy returns an empty 204 for form updates.
+        # get the updated incident and return it with the update status code
+        status_code = response.status_code
+        updated_incident, _ = self.get_form_entry(form_name, entry_id, values)
+
+        return updated_incident, status_code
+
+    def add_worklog_to_incident(self, req_id, details, activity_type=None, view_access=None, secure_log=None, payload={}):
+        """
+        add_worklog_to_incident is a member function used to update form data
+        based on a form name and request ID
+        The function returns: a tuple with the response content as json and the http status code.
+
+        :param form_name: name of the form to query
+        :type form_name: str
+        :param req_id: the request ID of the desired entry
+        :type req_id: str
+        :param values: dict of incident values to update
+        :type values: dict
+        :param payload: Any extra options you want to include on the incident, defaults to {}
+        :type payload: dict, optional
+        :return: the response content and http status code as a tuple
+        :rtype: tuple(json, int)
+        """
+        # Retrieve Entry ID from form to use on modify entry
+        form_name="HPD:Help Desk"
+        incident, status_code = self.advanced_query(form_name, "'Incident Number'=\"{}\"".format(req_id), ["Entry ID"])
+
+        entry_id = incident['entries'][0]["values"]["Entry ID"]
+
+        # Create attachment URL and values
+       
+        values = { "values": 
+            {
+                "z1D_Details": "{}".format(details if details is not None else "No details entered"),
+                "z1D_View_Access": "{}".format(view_access or "Public"),
+                "z1D_Activity_Type": activity_type or "General Information",
+                "z1D_Secure_Log": secure_log or "Yes"
+            }
+        }
+
+        url = self.base_url + REQUEST_PREFIX + "/{}/{}".format(form_name, entry_id)
+
+        response = requests.request("PUT", url, json=values, headers=self.reqHeaders, verify=self.verify,
                                      proxies=self.proxies, timeout=self.timeout)
 
         response.raise_for_status()
