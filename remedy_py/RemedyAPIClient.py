@@ -8,6 +8,13 @@
 
 # pragma pylint: disable=unused-argument, no-self-use, undefined-variable
 
+
+# Changelog
+###############################################################################
+# When       # Who                    # What
+###############################################################################
+# 2023 01 08 # Daniel Companeetz      # Attachments and worklogs to incidents
+
 import requests
 from .interface.remedy_api import RemedyAPI
 # Load constant values for API Calls
