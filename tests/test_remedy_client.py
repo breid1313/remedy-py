@@ -10,6 +10,12 @@ from remedy_py.RemedyAPIClient import RemedyClient
 from mock import patch
 import unittest
 
+# Changelog
+###############################################################################
+# When       # Who                    # What
+###############################################################################
+# 2023 01 08 # Daniel Companeetz      # Adding unit testing for new INC methods
+
 
 ####
 # Pass an obj argument to all the mocked methods
@@ -59,6 +65,28 @@ def mock_update_form_entry(obj, form_name, req_id, values):
 
 def mock_delete_form_entry(obj, form_name, req_id):
     return {}, 204
+
+def mock_advanced_query(obj, form_name, query, return_values):
+    response = {"entries":[
+        {"values":
+            {"Entry ID":"INC000000000001"},
+            "_links":
+                {"self":[
+                    {"href":"foo"}
+                    ]
+                }
+            }
+        ],
+        "_links":
+            {"self":
+                [
+                    {"href":"foo"}
+                    ]
+                }
+            }
+    mock_response =   response  
+    return mock_response, 200
+
 
 
 class TestRemedyClient(unittest.TestCase):
@@ -112,7 +140,24 @@ class TestRemedyClient(unittest.TestCase):
         req_id = "INC0000000001"
         response, status_code = self.client.delete_form_entry(self.form_name, req_id)
         assert(status_code == 204)
+
     
+    @patch('remedy_py.RemedyAPIClient.RemedyClient.advanced_query', mock_advanced_query)
+    def test_advanced_query(self, *args, **kwargs):
+        req_id = "INC0000000001"
+        form_name = 'HPD:Help Desk'
+        response, status_code = self.client.advanced_query(form_name, "'Incident Number'=\"{}\"".format(req_id), ["Entry ID"])
+        assert(status_code == 200)
+        
+
+    @patch('remedy_py.RemedyAPIClient.RemedyClient.attach_file_to_incident', mock_attach_file_to_incident)
+    def attach_file_to_incident(self, *args, **kwargs):
+        assert(status_code == 204)
+
+    @abc.abstractmethod
+    def add_worklog_to_incident(self, *args, **kwargs):
+        assert(status_code == 200)
+        
 
 if __name__ == '__main__': 
     unittest.main()
