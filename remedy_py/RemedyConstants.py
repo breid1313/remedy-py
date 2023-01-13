@@ -6,10 +6,20 @@
 # The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+# Changelog
+###############################################################################
+# When       # Who                    # What
+###############################################################################
+# 2023 01 08 # Daniel Companeetz      # Moved here constants from class module
+
 
 # Constant values
 DEFAULT_HTTP_PORT = 8008
 DEFAULT_HTTPS_PORT = 8443
+
+# Class constants
+REQUEST_PREFIX = "/arsys/v1/entry"
+DEFAULT_TIMEOUT = 30
 
 # Interpreted values
 HTTP_BASE_URL = lambda host, port: "http://{0}:{1}/api".format(host, str(port))
