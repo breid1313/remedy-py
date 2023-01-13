@@ -271,7 +271,7 @@ class RemedyClient(RemedyAPI):
         # Remedy returns an empty 204 for form updates.
         # get the updated incident and return it with the update status code
         status_code = response.status_code
-        updated_incident, _ = self.get_form_entry(form_name, req_id, values)
+        updated_incident, _ = self.get_form_entry(form_name, req_id)
 
         return updated_incident, status_code
 
@@ -404,6 +404,7 @@ class RemedyClient(RemedyAPI):
 
         url = self.base_url + self.prefix + "/{}/{}".format(form_name, entry_id)
 
+        # Send only the authorization header for content-type to be set as multipart by the requests module
         reqHeaders = {'Authorization': self.reqHeaders['Authorization']}
         response = requests.request("PUT", url, data=None, files=files, headers=reqHeaders, verify=self.verify,
                                      proxies=self.proxies, timeout=self.timeout)
@@ -413,7 +414,7 @@ class RemedyClient(RemedyAPI):
         # Remedy returns an empty 204 for form updates.
         # get the updated incident and return it with the update status code
         status_code = response.status_code
-        updated_incident, _ = self.get_form_entry(form_name, entry_id, values)
+        updated_incident, _ = self.get_form_entry(form_name, entry_id)
 
         return updated_incident, status_code
 
@@ -462,6 +463,6 @@ class RemedyClient(RemedyAPI):
         # Remedy returns an empty 204 for form updates.
         # get the updated incident and return it with the update status code
         status_code = response.status_code
-        updated_incident, _ = self.get_form_entry(form_name, entry_id, values)
+        updated_incident, _ = self.get_form_entry(form_name, entry_id)
 
         return updated_incident, status_code
