@@ -36,7 +36,7 @@ import requests
 from remedy_py.RemedyConstants import *
 
 # Load Abstract Class for checking implementations
-from .interface.remedy_api import RemedyAPI
+from remedy_py.interface.remedy_api import RemedyAPI
 
 
 class RemedyClient(RemedyAPI):
