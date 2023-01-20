@@ -27,7 +27,8 @@ Example usage:
 `client = RemedyClient("example.domain", "Allen", "password", verify=False)`
 
 ### Create a form entry
-```python
+
+``` python
 ENTRY_TEMPLATE = {
     "First_Name": "Allen",
     "Last_Name": "Allbrook",
@@ -48,7 +49,66 @@ incident_id = incident["values"]["Incident Number"]
 request_id = incident["values"]["Request ID"]
 ```
 
+## New in the latest release
+
+### Run an advanced query
+
+advanced_query is a member function used to gather form data based on a form name and a query provided by the user.
+
+The function returns: a tuple with the response content as json and the http status code.
+
+Provide the following parameters:
+
+- form_name: name of the form to query
+- query: properly formatted query (no validation by the function). You may want to implement code injection verification protocols.
+- return_values: list of value/keys to return from the form (returns the complete form if None (default))
+
+### Add a worklog to an incident
+
+add_worklog_to_incident is a member function used to add a worklog entry to the incident based on the incident ID the user knows. (uses advanced query to get the Entry ID requried from the HPD:Help Desk form.)
+
+The function returns: a tuple with the updated Incident content as json and the http status code.
+
+Provide the following parameters:
+
+- req_id: Incident ID to which the worklog will be added
+- details: Text that will appear in the Notes
+- activity_type: (optional) Activity type: Defaults to General Information if None
+- view_access:  (optional) Public if None
+- secure_log: (optional) Yes if None
+
+``` python
+req_id = incident_id
+details = f"This updated via REST API for incident {incident_id}"
+
+updated_incident, status_code = client.add_worklog_to_incident(req_id, details)
+
+```
+
+### Attach a file to an incident
+
+attach_file_to_incident is a member function used to attach a file to an incident
+
+The function returns: a tuple with the updated incident as json (dict), and the http status code (should be 204, as the content is empty). This method may be made general for any form, but since it could not be tested,  "HPD:Help Desk" was set as a default form.
+
+- req_id: Incident ID to which the file will be added
+- filepath: File path to the attachment
+- filename: File name of the attachment
+- form_name: (optional) form to attach the file to. ('HPD:Help Desk' default)
+- view_access:  (optional) Public if None
+- secure_log: (optional) Yes if None
+
+``` python
+req_id = incident_id
+tmpdir = tempfile.gettempdir()
+file_log = f"log_{runId}_{runNo}.txt"
+
+updated_incident, status_code = client.attach_file_to_incident(req_id=incident_id, 
+    filepath=tmpdir, filename=file_log, details="Helix Control-M Log file")
+```
+
 ## Contributing
+
 Your feedback and contributions are welcome through issues and pull requests on the GitHub repository.
 Please be as descriptive as possible with issues or feature requests and provide testing instructions
 with any pull requests.
@@ -56,5 +116,12 @@ with any pull requests.
 Thank you for helping to advance this project!
 
 ### Contributors
+
 Special shout out to my good friend and colleague Ryan Gordon (@Ryan-Gordon & @Ryan-Gordon1)
 for helping get this off the ground. I appreciate your open and honest feedback and bright ideas.
+
+Additional Contributors
+
+| Date | Who | What |
+| - | - | - |
+| 2023-01-19 | Daniel Companeetz | advanced_query, add_worklog_to_incident, attach_file_to_incident |

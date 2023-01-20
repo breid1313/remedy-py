@@ -38,11 +38,14 @@ from remedy_py.RemedyConstants import *
 # Load Abstract Class for checking implementations
 from remedy_py.interface.remedy_api import RemedyAPI
 
-
 class RemedyClient(RemedyAPI):
-    """ Client for the Remedy ITSM API. Object will inherit values and methods (see __init__) """
+    """ 
+    Client for the Remedy ITSM API. Object will inherit values and methods (see __init__) 
 
-    def __init__(self, host, username, password, port=None, verify=True, proxies={}, timeout=DEFAULT_TIMEOUT, prefix=REQUEST_PREFIX):
+    """
+
+    def __init__(self, host, username, password, port=None, verify=True, proxies={}, 
+            timeout=DEFAULT_TIMEOUT, prefix=REQUEST_PREFIX):
         """
         Initializes the Client class.
 
@@ -315,6 +318,7 @@ class RemedyClient(RemedyAPI):
         :type req_id: str
         :param return_values: list of field names to return from the created entry
         :type return_values: list
+
         :return: the response content and http status code as a tuple
         :rtype: tuple(json, int)
         """
@@ -361,6 +365,7 @@ class RemedyClient(RemedyAPI):
         :type content_type: str
         :param view_access: Public (default) if the attachment can be seen by everyone.
         :type content_type: str
+
         :return: the response content and http status code as a tuple
         :rtype: tuple(json, int)
         """
@@ -368,7 +373,7 @@ class RemedyClient(RemedyAPI):
 
         incident, status_code = self.advanced_query(form_name, "'Incident Number'=\"{}\"".format(req_id), ["Entry ID"])
 
-        entry_id = incident['entries'][0]["values"]["Entry ID"]
+        entry_id = incident['entries'][0]['values']['Entry ID']
 
         # Create attachment URL and values
         values = {
@@ -392,6 +397,7 @@ class RemedyClient(RemedyAPI):
                     file.seek(-10 * 1024 * 1024, SEEK_END)  # Note minus sign
                 # Read the remaining of the file (or all of it)
                 content = file.read()
+        # bare except to avoid errors and put something on the content. Otherwise meaningless.        
         except:
             content = 'File {} could not be read'.format(filepath+sep+filename)
 
@@ -433,6 +439,7 @@ class RemedyClient(RemedyAPI):
         :type values: dict
         :param payload: Any extra options you want to include on the incident, defaults to {}
         :type payload: dict, optional
+        
         :return: the response content and http status code as a tuple
         :rtype: tuple(json, int)
         """
