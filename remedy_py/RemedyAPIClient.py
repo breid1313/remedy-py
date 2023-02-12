@@ -392,9 +392,9 @@ class RemedyClient(RemedyAPI):
             size = getsize(filepath+sep+filename)
             with open(f'{filepath+sep+filename}', 'rb') as file:
                 # Do not read more than 10MB of the file 
-                if size >= 10 * 1024 * 1024 :
+                if size >= 10000000 :
                     # File is bigger than 10MB, so read the last 10MB
-                    file.seek(-10 * 1024 * 1024, SEEK_END)  # Note minus sign
+                    file.seek(-10000000, SEEK_END)  # Note minus sign
                 # Read the remaining of the file (or all of it)
                 content = file.read()
         # bare except to avoid errors and put something on the content. Otherwise meaningless.        
