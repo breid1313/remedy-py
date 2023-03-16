@@ -46,4 +46,15 @@ class RemedyAPI(ABC):
     @abc.abstractmethod
     def delete_form_entry(self, *args, **kwargs):
         raise NotImplementedError("Child classes must implement all methods of the RemedyAPI interface.")
-    
+
+    @abc.abstractmethod
+    def advanced_query(self, *args, **kwargs):
+        raise NotImplementedError("Child classes must implement all methods of the RemedyAPI interface.")
+
+    @abc.abstractmethod
+    def attach_file_to_incident(self, *args, **kwargs):
+        raise NotImplementedError("Child classes must implement all methods of the RemedyAPI interface.")
+
+    @abc.abstractmethod
+    def add_worklog_to_incident(self, *args, **kwargs):
+        raise NotImplementedError("Child classes must implement all methods of the RemedyAPI interface.")
